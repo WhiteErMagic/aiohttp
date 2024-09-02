@@ -1,8 +1,7 @@
 import flask
-from flask import request
+from flask import request, jsonify
 from flask.views import MethodView
-from models import Advertisements, Session
-
+from models import Advertisements, Session, User
 
 app = flask.Flask('app')
 
@@ -19,17 +18,29 @@ class UserView(MethodView):
 class AdvertisementsView(MethodView):
     def post(self):
         json_data = request.json
-        print(json_data)
         advertisement = Advertisements(**json_data)
         request.session.add(advertisement)
         request.session.commit()
         return {'id': advertisement.id}
 
-    def patch(self):
-        pass
+    def patch(self, id):
+        json_data = request.json
+        advertisement = request.session.get(Advertisements, id=id)
+        for k, v in json_data:
+            advertisement[k] = v
+        request.session.commit()
+        return jsonify(advertisement.json)
 
-    def delete(self):
-        pass
+    def delete(self, id):
+        json_data = request.json
+        user = request.session.get(Advertisements, id=json_data['id'])
+        request.session.delete(Advertisements, id=id)
+        request.session.commit()
+        return {'id': 'deleted'}
+
+    def get(self, id: int):
+        advertisement = request.session.get(Advertisements, id=id)
+        return jsonify(advertisement.json)
 
 
 @app.before_request
@@ -44,8 +55,6 @@ def after_request(http_response: flask.Response):
     return http_response
 
 
-AdvertisementsView.as_view('advertisements')
-
-app.add_url_rule('/advertisements/', view_func=hello, methods=['POST'])
-
+app.add_url_rule('/advertisements/', view_func=AdvertisementsView.as_view('advertisements'), methods=['POST', 'GET',
+                                                                                                'DELETE', 'UPDATE'])
 app.run()
