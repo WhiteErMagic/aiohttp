@@ -32,8 +32,6 @@ class AdvertisementsView(MethodView):
         return jsonify(advertisement.json)
 
     def delete(self, id):
-        json_data = request.json
-        user = request.session.get(Advertisements, id=json_data['id'])
         request.session.delete(Advertisements, id=id)
         request.session.commit()
         return {'id': 'deleted'}
